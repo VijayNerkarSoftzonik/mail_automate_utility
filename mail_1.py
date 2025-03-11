@@ -39,7 +39,7 @@ DATE_COLUMN = "Mail Sent Date"  # New column to track sent dates
 # 🟢 Zoho Mail Credentials
 ZOHO_SMTP_SERVER = "smtp.zoho.com"
 EMAIL_ID = "vijay.nerkar@softzonik.com"
-EMAIL_PASSWORD = "Mobile@Sgn$4"
+EMAIL_PASSWORD = "<Passwrd>"
 
 # # Get password securely
 # EMAIL_PASSWORD = os.getenv("ZOHO_PASSWORD")
