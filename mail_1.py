@@ -1,25 +1,28 @@
 import smtplib
+import imaplib
+import email
 import os
 import pandas as pd
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
-from getpass import getpass
 
 # 🟢 Paths for Local Files
-BASE_PATH = "H:\\SoftZonik\\mail_auto_sent_utility\\data"
+BASE_PATH = "H:\\SoftZonik\\mail_auto_sent_utility\\data\input_file"
+GENERATED_FILE_PATH = "H:\SoftZonik\mail_auto_sent_utility\data\Generate_File"
+IMAGES_PATH = "H:\\SoftZonik\\mail_auto_sent_utility\\images"
 EXCEL_FILE = os.path.join(BASE_PATH, "email_data.xlsx")
-NEW_EXCEL_FILE = os.path.join(BASE_PATH, "email_data_with_sent_date.xlsx")  # New file with sent dates
-IMAGE_FILE = os.path.join(BASE_PATH, "initial.jpg")
+NEW_EXCEL_FILE = os.path.join(GENERATED_FILE_PATH, "email_data_with_sent_date.xlsx")  # Output file
+IMAGE_FILE = os.path.join(IMAGES_PATH, "initial.jpg")  # Banner Image
 
 # Social Media Icons (Local Files)
 SOCIAL_MEDIA_ICONS = {
-    "youtube": os.path.join(BASE_PATH, "youtube.PNG"),
-    "whatsapp": os.path.join(BASE_PATH, "whatsup.PNG"),
-    "facebook": os.path.join(BASE_PATH, "facebook.PNG"),
-    "linkedin": os.path.join(BASE_PATH, "linkedLin.PNG"),
-    "instagram": os.path.join(BASE_PATH, "instagram.PNG"),
+    "youtube": os.path.join(IMAGES_PATH, "youtube.PNG"),
+    "whatsapp": os.path.join(IMAGES_PATH, "whatsup.PNG"),
+    "facebook": os.path.join(IMAGES_PATH, "facebook.PNG"),
+    "linkedin": os.path.join(IMAGES_PATH, "linkedLin.PNG"),
+    "instagram": os.path.join(IMAGES_PATH, "instagram.PNG"),
 }
 
 # Clickable Social Media Links
@@ -31,29 +34,20 @@ SOCIAL_MEDIA_LINKS = {
     "instagram": "https://www.instagram.com/softzonik_academy/",
 }
 
-# 🟢 Excel Column Names
-NAME_COLUMN = "First Name"
-EMAIL_COLUMN = "mail id"
-DATE_COLUMN = "Mail Sent Date"  # New column to track sent dates
-
 # 🟢 Zoho Mail Credentials
 ZOHO_SMTP_SERVER = "smtp.zoho.com"
+ZOHO_IMAP_SERVER = "imap.zoho.com"
 EMAIL_ID = "vijay.nerkar@softzonik.com"
-EMAIL_PASSWORD = "<Passwrd>"
+EMAIL_PASSWORD = "Mobile@Sgn$4"  # Use an App Password if needed
 
-# # Get password securely
-# EMAIL_PASSWORD = os.getenv("ZOHO_PASSWORD")
-# if not EMAIL_PASSWORD:
-#     EMAIL_PASSWORD = getpass("Enter Zoho Mail Password: ")
+DATE_COLUMN = "Mail Sent Date"  # Column to store the sent date
 
 def read_email_list():
-    """ Reads names & email addresses from Excel and creates a new file with 'Mail Sent Date' column. """
+    """Reads only the required columns from the input Excel file."""
     try:
-        df = pd.read_excel(EXCEL_FILE, usecols=[NAME_COLUMN, EMAIL_COLUMN])  # Read original Excel
-        df.dropna(inplace=True)  # Remove empty rows
-        df[EMAIL_COLUMN] = df[EMAIL_COLUMN].str.strip()
-        
-        # Add new column for sent date (default empty)
+        df = pd.read_excel(EXCEL_FILE, usecols=["company_name", "First Name", "mail id"])
+
+        # Add Mail Sent Date column if it does not exist
         if DATE_COLUMN not in df.columns:
             df[DATE_COLUMN] = ""
 
@@ -64,15 +58,15 @@ def read_email_list():
         return pd.DataFrame()
 
 def attach_image(msg, image_path, cid):
-    """ Attaches an image and sets a Content-ID (cid) for embedding. """
+    """ Attaches an image and sets a Content-ID (cid) for embedding in HTML. """
     with open(image_path, "rb") as img:
         mime_img = MIMEImage(img.read())
         mime_img.add_header("Content-ID", f"<{cid}>")
         mime_img.add_header("Content-Disposition", "inline", filename=cid)
         msg.attach(mime_img)
 
-def send_email(name, to_email):
-    """ Sends a personalized email and updates the sent date in the new Excel file. """
+def send_email(company, name, to_email):
+    """Sends an email, logs sent date, and deletes sent email from Zoho. """
     try:
         server = smtplib.SMTP_SSL(ZOHO_SMTP_SERVER, 465)
         server.login(EMAIL_ID, EMAIL_PASSWORD)
@@ -80,16 +74,15 @@ def send_email(name, to_email):
         msg = MIMEMultipart()
         msg["From"] = EMAIL_ID
         msg["To"] = to_email
-        msg["Subject"] = "Transform Your Business with Cutting-Edge Software Solutions"
+        msg["Subject"] = "Business Collaboration Opportunity"
 
-        # Attach the main banner image
+        # Attach images
         attach_image(msg, IMAGE_FILE, "logo")
-
-        # Attach social media icons
         for key, image_path in SOCIAL_MEDIA_ICONS.items():
             attach_image(msg, image_path, key)
 
-        # HTML Email Template with Smaller Social Media Icons
+        # HTML Email Template with Proper Formatting
+         # HTML Email Template with Smaller Social Media Icons
         html_content = f"""
         <html>
         <body style="background-color:#121212; color:white; font-family:Arial, sans-serif;">
@@ -146,24 +139,69 @@ def send_email(name, to_email):
         </html>
         """
 
+
+
         msg.attach(MIMEText(html_content, "html"))
         server.sendmail(EMAIL_ID, to_email, msg.as_string())
         server.quit()
 
         print(f"✅ Sent email to {to_email} (Hi {name})")
+
+        # Delete the email from Sent Items
+        delete_sent_email(msg["Subject"])
+
         return datetime.now().strftime("%d-%m-%y")  # Return the sent date
 
     except Exception as e:
         print(f"❌ Failed to send email to {to_email}: {e}")
         return ""
 
+def delete_sent_email(to_email):
+    """Deletes the sent email from Zoho's Sent Items based on recipient email."""
+    try:
+        mail = imaplib.IMAP4_SSL(ZOHO_IMAP_SERVER)
+        mail.login(EMAIL_ID, EMAIL_PASSWORD)
+
+        # ✅ Identify the correct Sent folder
+        status, folders = mail.list()
+        sent_folder = None
+        for folder in folders:
+            folder_name = folder.decode().split(' "/" ')[-1].strip('"')
+            if "Sent" in folder_name:
+                sent_folder = folder_name
+                break
+        
+        if not sent_folder:
+            print("⚠️ Sent folder not found. Email deletion skipped.")
+            return
+
+        mail.select(sent_folder)  # Open Sent Items folder
+
+        # ✅ Search for emails sent TO the recipient
+        result, data = mail.search(None, f'TO "{to_email}"')
+
+        if result == "OK" and data[0]:
+            email_ids = data[0].split()
+            for email_id in email_ids:
+                mail.store(email_id, "+FLAGS", "\\Deleted")  # Mark email for deletion
+            mail.expunge()  # ✅ Permanently delete marked emails
+            print(f"🗑️ Deleted sent email to: {to_email}")
+        else:
+            print(f"⚠️ No matching sent email found for: {to_email}")
+
+        mail.logout()
+
+    except Exception as e:
+        print(f"❌ Failed to delete sent email: {e}")
+
+
 # 🚀 **Main Execution**
 if __name__ == "__main__":
     df = read_email_list()
     if not df.empty:
         for index, row in df.iterrows():
-            sent_date = send_email(row[NAME_COLUMN], row[EMAIL_COLUMN])
-            df.at[index, DATE_COLUMN] = sent_date  # Update date column
+            sent_date = send_email(row["company_name"], row["First Name"], row["mail id"])
+            df.at[index, DATE_COLUMN] = sent_date  # Update sent date column
 
         # Save updated data to a new Excel file
         df.to_excel(NEW_EXCEL_FILE, index=False)
