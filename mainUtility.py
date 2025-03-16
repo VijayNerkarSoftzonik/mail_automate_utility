@@ -2,6 +2,7 @@ import smtplib
 import imaplib
 import email
 import os
+import time
 import pandas as pd
 from datetime import datetime
 from email.mime.text import MIMEText
@@ -78,66 +79,64 @@ def send_email(company, name, to_email):
 
         # Attach images
         attach_image(msg, IMAGE_FILE, "logo")
-        for key, image_path in SOCIAL_MEDIA_ICONS.items():
-            attach_image(msg, image_path, key)
+        
 
         # HTML Email Template with Proper Formatting
          # HTML Email Template with Smaller Social Media Icons
         html_content = f"""
         <html>
-        <body style="background-color:#121212; color:white; font-family:Arial, sans-serif;">
-            <img src="cid:logo" alt="Business Strategy" style="width:100%; max-height:200px; object-fit:cover;">
-            <h2>Transform Your Business with Cutting-Edge Software Solutions</h2>
-            <p>Dear <b>{name}</b>,</p>
-            <p>In today’s digital world, <b>customized software can be the game-changer for your business.</b> 
-            At <b>SoftZonik</b>, we specialize in delivering <b>high-quality, scalable, and innovative software solutions</b> tailored to your needs.</p>
+        <body style="background: linear-gradient(to right, #f4f4f4, #e8e8e8); color:#333; font-family:Arial, sans-serif; padding:20px;">
 
-            <h3>💡 Our Expertise:</h3>
-            <ul>
-                <li>✔ <b>Web & Mobile App Development</b> – User-Friendly, Scalable & Secure Solutions</li>
-                <li>✔ <b>Custom Websites</b> – Static and dynamic websites</li>
-                <li>✔ <b>Software Development</b> – Custom, AI, Automation & Smart Integrations</li>
-                <li>✔ <b>IT Consulting</b> – Your problem is now OUR problem</li>
-                <li>✔ <b>Cloud Hosting</b> – Efficient & Cost-Saving Hosting</li>
-                <li>✔ <b>Corporate Training</b> – Customized training per your need</li>
-            </ul>
+            <div style="max-width:600px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0px 0px 10px rgba(0,0,0,0.1);">
 
-            <p>🚀 <b>Let’s Build Something Amazing Together!</b></p>
-            <p>📞 <b>Schedule a Free Consultation</b> to discuss how we can transform your business!</p>
+                <img src="cid:logo" alt="Business Strategy" style="width:100%; max-height:200px; object-fit:cover; border-radius:5px;">
+                <h2 style="color:#333; text-align:center;">Transform Your Business with Cutting-Edge Software Solutions</h2>
 
-            <p><a href="mailto:vijay.nerkar@softzonik.com" style="color:#ffcc00;">📩 Let’s Talk | 📧 Reply to This Email</a></p>
+                <p>Dear <b>{name}</b>,</p>
+                <p>In today’s digital world, <b>customized software can be the game-changer for your business.</b> 
+                At <b>SoftZonik</b>, we specialize in delivering <b>high-quality, scalable, and innovative software solutions</b> tailored to your needs.</p>
 
-            <p>🔥 <b>Limited Projects Onboarded Monthly – Secure Your Spot Now!</b></p>
+                <h3 style="color:#555;">💡 Our Expertise:</h3>
+                <ul style="background:#fafafa; padding:15px; border-radius:5px;">
+                    <li>✔ <b>Web & Mobile App Development</b> – User-Friendly, Scalable & Secure Solutions</li>
+                    <li>✔ <b>Custom Websites</b> – Static and dynamic websites</li>
+                    <li>✔ <b>Software Development</b> – Custom, AI, Automation & Smart Integrations</li>
+                    <li>✔ <b>IT Consulting</b> – Your problem is now OUR problem</li>
+                    <li>✔ <b>Cloud Hosting</b> – Efficient & Cost-Saving Hosting</li>
+                    <li>✔ <b>Corporate Training</b> – Customized training per your need</li>
+                </ul>
 
-            <p>Best Regards,</p>
-            <p><b>Nitin Shinde</b><br>
-            Founder, SoftZonik<br>
-            📞 +91-976-495-9860<br>
-            🌍 <a href="https://www.softzonik.com" style="color:#ffcc00;">www.softzonik.com</a>
-            </p>
+                <p>🚀 <b>Let’s Build Something Amazing Together!</b></p>
+                <p>📞 <b>Schedule a Free Consultation</b> to discuss how we can transform your business!</p>
 
-            <!-- Social Media Links with Smaller Icons -->
-            <p>
-                <a href="{SOCIAL_MEDIA_LINKS['youtube']}" target="_blank">
-                    <img src="cid:youtube" width="25" height="25">
-                </a>
-                <a href="{SOCIAL_MEDIA_LINKS['whatsapp']}" target="_blank">
-                    <img src="cid:whatsapp" width="25" height="25">
-                </a>
-                <a href="{SOCIAL_MEDIA_LINKS['facebook']}" target="_blank">
-                    <img src="cid:facebook" width="25" height="25">
-                </a>
-                <a href="{SOCIAL_MEDIA_LINKS['linkedin']}" target="_blank">
-                    <img src="cid:linkedin" width="25" height="25">
-                </a>
-                <a href="{SOCIAL_MEDIA_LINKS['instagram']}" target="_blank">
-                    <img src="cid:instagram" width="25" height="25">
-                </a>
-            </p>
+                <p><a href="mailto:vijay.nerkar@softzonik.com" style="color:#ff5722; font-size:16px;">📩 Let’s Talk | 📧 Reply to This Email</a></p>
+
+                <p style="background:#ff5722; color:white; padding:10px; border-radius:5px; text-align:center;">
+                    🔥 <b>Limited Projects Onboarded Monthly – Secure Your Spot Now!</b>
+                </p>
+
+                <p>Best Regards,</p>
+                <p><b>Nitin Shinde</b><br>
+                Founder, SoftZonik<br>
+                📞 +91-976-495-9860<br>
+                🌍 <a href="https://www.softzonik.com" style="color:#ff5722;">www.softzonik.com</a>
+                </p>
+
+                <p><b>Connect with us:</b></p>
+               <p>
+                    <a href="{SOCIAL_MEDIA_LINKS['youtube']}" target="_blank" style="color:#ffcc00; text-decoration:none;">YouTube</a> |
+                    <a href="{SOCIAL_MEDIA_LINKS['whatsapp']}" target="_blank" style="color:#ffcc00; text-decoration:none;">WhatsApp</a> |
+                    <a href="{SOCIAL_MEDIA_LINKS['facebook']}" target="_blank" style="color:#ffcc00; text-decoration:none;">Facebook</a> |
+                    <a href="{SOCIAL_MEDIA_LINKS['linkedin']}" target="_blank" style="color:#ffcc00; text-decoration:none;">LinkedIn</a> |
+                    <a href="{SOCIAL_MEDIA_LINKS['instagram']}" target="_blank" style="color:#ffcc00; text-decoration:none;">Instagram</a>
+                </p>
+
+            </div>
 
         </body>
         </html>
         """
+
 
 
 
@@ -146,6 +145,8 @@ def send_email(company, name, to_email):
         server.quit()
 
         print(f"✅ Sent email to {to_email} (Hi {name})")
+        
+        time.sleep(10)  # Wait for 2 seconds before attempting to delete the sent email
 
         # Delete the email from Sent Items
         delete_sent_email(msg["Subject"])
@@ -156,38 +157,38 @@ def send_email(company, name, to_email):
         print(f"❌ Failed to send email to {to_email}: {e}")
         return ""
 
-def delete_sent_email(to_email):
-    """Deletes the sent email from Zoho's Sent Items based on recipient email."""
+def delete_sent_email(subject):
+    """Deletes the sent email from Zoho's Sent Items using the subject."""
     try:
         mail = imaplib.IMAP4_SSL(ZOHO_IMAP_SERVER)
         mail.login(EMAIL_ID, EMAIL_PASSWORD)
 
-        # ✅ Identify the correct Sent folder
+        # ✅ Get the correct Sent folder
         status, folders = mail.list()
         sent_folder = None
         for folder in folders:
             folder_name = folder.decode().split(' "/" ')[-1].strip('"')
-            if "Sent" in folder_name:
+            if "Sent" in folder_name:  # Works for "Sent" or "Sent Items"
                 sent_folder = folder_name
                 break
-        
+
         if not sent_folder:
-            print("⚠️ Sent folder not found. Email deletion skipped.")
+            print("⚠️ Sent folder not found. Skipping deletion.")
             return
 
-        mail.select(sent_folder)  # Open Sent Items folder
+        mail.select(sent_folder)  # Select the Sent folder
 
-        # ✅ Search for emails sent TO the recipient
-        result, data = mail.search(None, f'TO "{to_email}"')
+        # ✅ Search for emails by SUBJECT instead of TO
+        result, data = mail.search(None, f'SUBJECT "{subject}"')
 
         if result == "OK" and data[0]:
             email_ids = data[0].split()
             for email_id in email_ids:
-                mail.store(email_id, "+FLAGS", "\\Deleted")  # Mark email for deletion
-            mail.expunge()  # ✅ Permanently delete marked emails
-            print(f"🗑️ Deleted sent email to: {to_email}")
+                mail.store(email_id, "+FLAGS", "\\Deleted")  # Mark for deletion
+            mail.expunge()  # ✅ Ensure permanent deletion
+            print(f"🗑️ Deleted sent email with subject: {subject}")
         else:
-            print(f"⚠️ No matching sent email found for: {to_email}")
+            print(f"⚠️ No matching sent email found for subject: {subject}")
 
         mail.logout()
 
